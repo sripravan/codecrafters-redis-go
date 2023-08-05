@@ -25,9 +25,9 @@ func main() {
 	request_bytes := make([]byte, 16)
 	_, err = connection.Read(request_bytes)
 
-	request_string := strings.Trim(strings.TrimSpace(string(request_bytes)), "\n\x00")
+	request_string := strings.Trim(string(request_bytes), "\x00")
 
-	if request_string == "PING" {
+	if request_string == "*1\r\n$4\r\nping\r\n" {
 		fmt.Println("Received PING")
 		connection.Write([]byte("+PONG\r\n"))
 		fmt.Println("Sent PONG")
