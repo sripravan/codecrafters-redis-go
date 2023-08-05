@@ -7,26 +7,6 @@ import (
 	"strings"
 )
 
-func respond(connection net.Conn) {
-	request_bytes := make([]byte, 16)
-	_, err := connection.Read(request_bytes)
-
-	if err != nil {
-		fmt.Println("Error reading connection: ", err.Error())
-		os.Exit(1)
-	}
-
-	request_string := strings.Trim(string(request_bytes), "\x00")
-
-	if len(request_string) > 0 {
-		fmt.Println("Received PING")
-		connection.Write([]byte("+PONG\r\n"))
-		fmt.Println("Sent PONG")
-	}
-
-	connection.Close()
-}
-
 func main() {
 	listener, err := net.Listen("tcp", "0.0.0.0:6379")
 
@@ -35,16 +15,35 @@ func main() {
 		os.Exit(1)
 	}
 
-	defer listener.Close()
+	connection, err := listener.Accept()
+
+	if err != nil {
+		fmt.Println("Error accepting connection: ", err.Error())
+		os.Exit(1)
+	}
+
+	request_bytes := make([]byte, 128)
 
 	for {
-		connection, err := listener.Accept()
+		_, err = connection.Read(request_bytes)
 
 		if err != nil {
-			fmt.Println("Error accepting connection: ", err.Error())
+			if err.Error() == "EOF" {
+				break
+			}
+
+			fmt.Println("Error reading connection: ", err.Error())
 			os.Exit(1)
 		}
 
-		respond(connection)
+		request_string := strings.Trim(string(request_bytes), "\x00")
+
+		if len(request_string) > 0 {
+			fmt.Println("Received PING")
+			connection.Write([]byte("+PONG\r\n"))
+			fmt.Println("Sent PONG")
+		}
 	}
+
+	connection.Close()
 }
