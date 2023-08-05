@@ -35,19 +35,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	connection, err := listener.Accept()
-
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
-	}
-
-	respond(connection)
-
-	defer connection.Close()
+	defer listener.Close()
 
 	for {
-		connection, err = listener.Accept()
+		connection, err := listener.Accept()
 
 		if err != nil {
 			fmt.Println("Error accepting connection: ", err.Error())
