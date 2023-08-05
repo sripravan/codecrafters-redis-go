@@ -15,26 +15,35 @@ func main() {
 		os.Exit(1)
 	}
 
-	connection, err := listener.Accept()
+	for {
+		connection, err := listener.Accept()
 
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
-	}
+		if err != nil {
+			fmt.Println("Error accepting connection: ", err.Error())
+			os.Exit(1)
+		}
 
-	request_bytes := make([]byte, 16)
-	_, err = connection.Read(request_bytes)
+		request_bytes := make([]byte, 16)
+		_, err = connection.Read(request_bytes)
 
-	request_string := strings.Trim(string(request_bytes), "\x00")
+		if err != nil {
+			fmt.Println("Error reading connection: ", err.Error())
+			os.Exit(1)
+		}
 
-	if request_string == "*1\r\n$4\r\nping\r\n" {
-		fmt.Println("Received PING")
-		connection.Write([]byte("+PONG\r\n"))
-		fmt.Println("Sent PONG")
-	}
+		request_string := strings.Trim(string(request_bytes), "\x00")
 
-	if err != nil {
-		fmt.Println("Error reading connection: ", err.Error())
-		os.Exit(1)
+		if len(request_string) > 0 {
+			fmt.Println("Received PING")
+			connection.Write([]byte("+PONG\r\n"))
+			fmt.Println("Sent PONG")
+		}
+
+		err = connection.Close()
+
+		if err != nil {
+			fmt.Println("Error closing connection: ", err.Error())
+			os.Exit(1)
+		}
 	}
 }
